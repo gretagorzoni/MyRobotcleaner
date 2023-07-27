@@ -53,6 +53,7 @@ class RobotCleanerCoapProcess:
 
         print("CoAP server started on port ", str(port))
         await asyncio.sleep(3600)  # Il server rimane attivo per 1 ora
+        print("Server created")
 
 if __name__ == "__main__":
-    robot = RobotCleanerCoapProcess(port=5693)
+    robot = RobotCleanerCoapProcess(port=5699)

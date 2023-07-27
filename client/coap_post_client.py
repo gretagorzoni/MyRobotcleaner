@@ -10,7 +10,7 @@ async def main():
     protocol = await Context.create_client_context()
 
     # Avvio del robot con la modalità di default start
-    request = Message(code=aiocoap.POST, uri='coap://127.0.0.1:5693/operating_mode')
+    request = Message(code=aiocoap.POST, uri='coap://127.0.0.1:5699/operating_mode')
     try:
         response = await protocol.request(request).response
         if response.code.is_successful():
@@ -22,7 +22,7 @@ async def main():
         print(e)
 
     # Avvio del robot con la switch video di default on
-    request = Message(code=aiocoap.POST, uri='coap://127.0.0.1:5693/video_switch')
+    request = Message(code=aiocoap.POST, uri='coap://127.0.0.1:5699/video_switch')
     try:
         response = await protocol.request(request).response
         if response.code.is_successful():
@@ -34,4 +34,5 @@ async def main():
         print(e)
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
+    #asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())

@@ -1,3 +1,13 @@
+import numbers
+import time
+
+import aiocoap
+import aiocoap.resource as resource
+
+from kpn_senml import *
+from request.mode_actuator_request import ModeActuator
+from request.switch_video_actuator_request import VideoSwitchActuator
+
 '''import aiocoap
 import aiocoap.resource as resource
 import senml
@@ -31,7 +41,6 @@ class BatterySensorResource(resource.Resource):
 
         payload = str(current_level).encode("utf-8")
         return aiocoap.Message(payload=payload)'''
-
 '''
 import aiocoap
 import aiocoap.resource as resource
@@ -99,13 +108,7 @@ class BatterySensorResource(resource.Resource):
                                payload=payload)
 
 '''
-import aiocoap
-import json
-import aiocoap.resource as resource
-#from kpn_senml import *
 
-from request.mode_actuator_request import ModeActuator
-from request.switch_video_actuator_request import VideoSwitchActuator
 
 class BatterySensorResource(resource.Resource):
 
@@ -117,38 +120,50 @@ class BatterySensorResource(resource.Resource):
         self.position_sensor = position_sensor
 
     async def render_get(self, request):
+        global payload_string
         print("GET Request Received ...")
-        current_level = self.battery_sensor.get_level(mode_actuator=self.mode_actuator)
+        current_level = self.battery_sensor.get_level(mode_actuator=self.mode_actuator)  # battery level
+
+        #   SenMLPack per la serializzazione
+        pack = SenmlPack("battery_resource")
+        pack.base_time = int(time.time())
+
+        #   Low battery
         if current_level < 15:
+
             # Invia il comando di tornare alla stazione di ricarica
             self.video_switch.set_switch(VideoSwitchActuator.SWITCH_OFF)
+
             if current_level < 5:
+
                 # Invia il comando di spegnersi
                 self.mode_actuator.set_mode(ModeActuator.MODE_STOP)
+
                 if current_level == 0:
-                    # Creazione della lettura del sensore nel formato SenML
-                    record = {"n": "battery_status", "u": "percent", "v": current_level}
+                    #   SenMLRecord
+                    pack.add(SenmlRecord("zero battery", u=SenmlUnits.SENML_UNIT_PERCENTAGE_REMAINING_BATTERY_LEVEL,
+                                         v=current_level))
+
                 else:
-                    # Creazione della lettura del sensore nel formato SenML
-                    record = {"n": "battery_status", "u": "string", "v": "shutting_down"}
+                    #   SenMLRecord
+                    pack.add(SenmlRecord("very low battery", unit="string", vs="shutting down..."))
+
             else:
-                # Creazione della lettura del sensore nel formato SenML
-                record = {"n": "battery_status", "u": "string", "v": "returning_to_churging_station"}
+                #   SenMLRecord
+                pack.add(SenmlRecord("low battery", unit="string", vs="returning to charging station..."))
+
+        #   Good battery
         else:
-            # Creazione della lettura del sensore nel formato SenML
-            record = {"n": "battery_status", "u": "percent", "v": current_level}
+            #   SenMLRecord
+            pack.add(SenmlRecord("good battery", u=SenmlUnits.SENML_UNIT_PERCENTAGE_REMAINING_BATTERY_LEVEL,
+                                 v=current_level))
 
-        # Costruire il pacchetto SenML contenente la lettura del sensore
-        senml_data = [record]
-
-        # Convertire il pacchetto SenML in una stringa JSON
-        senml_json = json.dumps(senml_data)
+        # Serializza il SenMLPack
+        payload_string = pack.to_json()
 
         # Creare la risposta CoAP con la stringa JSON come payload
-        response = aiocoap.Message(payload=senml_json.encode("utf-8"))
-        response.opt.content_format = 11560  # Valore per il formato SenML JSON
+        response = aiocoap.Message(content_format=numbers.media_types_rev['application/senml+json'],
+                                   payload=payload_string.encode('utf8'))
+        # response.opt.content_format = 11560  # Valore per il formato SenML JSON
 
         return response
-
-
-

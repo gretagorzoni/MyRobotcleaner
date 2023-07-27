@@ -13,7 +13,7 @@ async def main():
     # Lettura delle risorse osservabili del robot
     resources = ['battery_level']
     for resource in resources:
-        request = Message(code=aiocoap.GET, uri=f'coap://127.0.0.1:5693/{resource}', observe=0, mid=None)
+        request = Message(code=aiocoap.GET, uri=f'coap://127.0.0.1:5699/{resource}', observe=0, mid=None)
         try:
             observation_is_active = True
             while observation_is_active:
