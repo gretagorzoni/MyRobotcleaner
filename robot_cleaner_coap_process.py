@@ -18,9 +18,9 @@ logging.getLogger("coap-server-1").setLevel(logging.INFO)
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+
 class RobotCleanerCoapProcess:
     def __init__(self, port):
-
         self.video_switch_actuator = None
         self.mode_actuator = None
         self.position_sensor = None
@@ -37,7 +37,8 @@ class RobotCleanerCoapProcess:
         self.video_switch_actuator = VideoSwitchActuator()
 
         # Creazione delle risorse
-        battery_resource = BatterySensorResource(self.battery_sensor, self.mode_actuator, self.video_switch_actuator, self.position_sensor)
+        battery_resource = BatterySensorResource(self.battery_sensor, self.mode_actuator, self.video_switch_actuator,
+                                                 self.position_sensor)
         position_resource = PositionSensorResource(self.position_sensor, self.mode_actuator)
         mode_resource = ModeActuatorResource(self.mode_actuator)
         video_switch_resource = VideoSwitchActuatorResource(self.video_switch_actuator)
@@ -54,6 +55,7 @@ class RobotCleanerCoapProcess:
         print("CoAP server started on port ", str(port))
         await asyncio.sleep(3600)  # Il server rimane attivo per 1 ora
         print("Server created")
+
 
 if __name__ == "__main__":
     robot = RobotCleanerCoapProcess(port=5699)

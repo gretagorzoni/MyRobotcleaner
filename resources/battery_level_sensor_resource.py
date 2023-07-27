@@ -123,7 +123,7 @@ class BatterySensorResource(resource.Resource):
         global payload_string
         print("GET Request Received ...")
         current_level = self.battery_sensor.get_level(mode_actuator=self.mode_actuator)  # battery level
-
+        current_level = int(current_level)
         #   SenMLPack per la serializzazione
         pack = SenmlPack("battery_resource")
         pack.base_time = int(time.time())
@@ -141,29 +141,28 @@ class BatterySensorResource(resource.Resource):
 
                 if current_level == 0:
                     #   SenMLRecord
-                    pack.add(SenmlRecord("zero battery", u=SenmlUnits.SENML_UNIT_PERCENTAGE_REMAINING_BATTERY_LEVEL,
-                                         v=current_level))
+                    pack.add(SenmlRecord("zero battery", unit=SenmlUnits.SENML_UNIT_PERCENTAGE_REMAINING_BATTERY_LEVEL,
+                                         value=current_level))
 
                 else:
                     #   SenMLRecord
-                    pack.add(SenmlRecord("very low battery", unit="string", vs="shutting down..."))
+                    pack.add(SenmlRecord("very low battery", unit="string", value="shutting down..."))
 
             else:
                 #   SenMLRecord
-                pack.add(SenmlRecord("low battery", unit="string", vs="returning to charging station..."))
+                pack.add(SenmlRecord("low battery", unit="string", value="returning to charging station..."))
 
         #   Good battery
         else:
             #   SenMLRecord
             pack.add(SenmlRecord("good battery", u=SenmlUnits.SENML_UNIT_PERCENTAGE_REMAINING_BATTERY_LEVEL,
-                                 v=current_level))
+                                 value=current_level))
 
         # Serializza il SenMLPack
         payload_string = pack.to_json()
 
         # Creare la risposta CoAP con la stringa JSON come payload
-        response = aiocoap.Message(content_format=numbers.media_types_rev['application/senml+json'],
-                                   payload=payload_string.encode('utf8'))
-        # response.opt.content_format = 11560  # Valore per il formato SenML JSON
+        response = aiocoap.Message(payload=payload_string.encode('utf8'))
+        response.opt.content_format = 11560  # Valore per il formato SenML JSON
 
         return response
